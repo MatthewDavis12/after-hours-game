@@ -10,6 +10,12 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserData = require("./Datastore/User")
 local UserDataStore = DatastoreService:GetDataStore(UserData:Name())
 
+--// Group Manager
+local Groups = require("../../ReplicatedStorage/Modules/Group")
+
+--// Command Manager
+local Command = require("../../ServerScriptService/Commands/Command")
+
 --// Data
 --// Data is considered one of two types "Private" and "Public".
 --//
@@ -30,12 +36,13 @@ type UserDataList = {[string]: UserData.UserData}
 
 --// Datastore Object
 local Datastore: any = {
-    Players = {} :: UserDataList
+    Players = {} :: UserDataList,
+    Connections = {} :: {[string]: {[string]: RBXScriptConnection}}
 }
 
 --// Helper function that allows us to recursively create
 --// the objects needed for the public values
-local function generateRecursiveDataObjects(parent: Configuration?, userData: any, dataContName: string): Configuration
+local function generateRecursiveDataObjects(parent: Configuration?, userData: any, dataContName: string, plr: Player): Configuration
     local dataContainer: Configuration = Instance.new("Configuration")
     dataContainer.Name = dataContName
 
@@ -45,12 +52,19 @@ local function generateRecursiveDataObjects(parent: Configuration?, userData: an
         end
 
         if typeof(dataValue) == "table" then
-            generateRecursiveDataObjects(dataContainer, dataValue, dataKey)
+            generateRecursiveDataObjects(dataContainer, dataValue, dataKey, plr)
             continue
         end
 
         dataContainer:SetAttribute(dataKey, dataValue)
     end
+
+    --// Connection for updating values in the table.
+    --// This allows us to update the players data in the table based on changes to the attributes
+    --// and releases the stress of managing data key by key
+    Datastore.Connections[plr.Name][dataContName] = dataContainer.AttributeChanged:Connect(function(attribute: string)
+        userData[attribute] = dataContainer:GetAttribute(attribute)
+    end)
 
     dataContainer.Parent = parent and parent or dataContainer.Parent
     return dataContainer
@@ -58,13 +72,22 @@ end
 
 --// Create data container
 function Datastore.createDataContainer(plr: Player, userData: UserData.UserData)
-    local dataContainer: Configuration = generateRecursiveDataObjects(nil, userData, "Data")
+    Datastore.Connections[plr.Name] = {}
+    local dataContainer: Configuration = generateRecursiveDataObjects(nil, userData, "Data", plr)
     dataContainer.Parent = plr
 end
 
 --// Save user data
-function Datastore:Save(datastoreName: DatastoreName): boolean?
-    return
+function Datastore:Save(plr: Player)
+    if RunService:IsStudio() then
+        return
+    end
+
+    local plrData: UserData.UserData = self.Players[plr.Name]
+
+    UserDataStore:UpdateAsync(tostring(plr.UserId), function(pastData: any)
+        return plrData
+    end)
 end
 
 --// Load user data
@@ -90,6 +113,12 @@ end
 function Datastore:Initialize()
     Players.PlayerAdded:Connect(function(plr: Player)  
         self:Load(plr)
+        plr:SetAttribute("Role", Groups:GetPermissionLevel(plr)) --// Assign permission levels to player
+
+        --// Attempt to process player messages as commands
+        plr.Chatted:Connect(function(msg: string)
+            Command:Processor(plr, msg)
+        end)
     end)
 
     Players.PlayerRemoving:Connect(function(plr: Player)
