@@ -33,6 +33,8 @@ local Datastore: any = {
     Players = {} :: UserDataList
 }
 
+--// Helper function that allows us to recursively create
+--// the objects needed for the public values
 local function generateRecursiveDataObjects(parent: Configuration?, userData: any, dataContName: string): Configuration
     local dataContainer: Configuration = Instance.new("Configuration")
     dataContainer.Name = dataContName
