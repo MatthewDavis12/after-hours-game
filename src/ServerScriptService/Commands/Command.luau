@@ -16,12 +16,18 @@ local Groups = require("../../ReplicatedStorage/Modules/Group")
 --// to the registry function and does not follow this template there
 --// is a potential for things to go wrong.
 export type Cmd = {
-    Token:       string,                     --// Command name.
-	Help:        string?,					 --// Displays when a user does the /cmd.
-	Short:       string,  					 --// Short handed version of the command.
-	PermLevel:   string,					 --// Determines the level at which the command can be ran.
-    Description: string,                     --// Short description that is displayed in the /cmd.
-    Run:         (Player, ...string) -> (),  --// The method that is called for the command code.
+	--// Command name.
+    Token:       string,                     
+	--// Displays when a user does the /cmd.
+	Help:        string?,					 
+	--// Short handed version of the command.
+	Short:       string,  					 
+	--// Determines the level at which the command can be ran.
+	PermLevel:   string,					 
+	--// Short description that is displayed in the /cmd.
+    Description: string,                     
+ 	--// The method that is called for the command code.
+    Run:         (Player, ...string) -> (), 
 }
 
 --// Command object that manages all commands

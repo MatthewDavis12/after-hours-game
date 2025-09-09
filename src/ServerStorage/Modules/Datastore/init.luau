@@ -42,6 +42,11 @@ type UserDataList = {[string]: UserData.UserData}
 --// Datastore Object
 local Datastore: any = {
     Players = {} :: UserDataList,
+    LeaderstatValues = {
+        {"Level", "IntValue"},
+        {"Kills", "IntValue"},
+        {"Cash", "IntValue"}
+    } :: {{string}},
     Connections = {} :: {[string]: {[string]: RBXScriptConnection}}
 }
 
@@ -112,6 +117,19 @@ function Datastore:Load(plr: Player): Configuration?
 
     if not userData then
         userData = UserData:New()
+    end
+
+    --// Build leaderstats folder
+    local ls: Folder = Instance.new("Folder") :: Folder
+    ls.Name = "leaderstats"
+    ls.Parent = plr
+
+    for _, statData: {string} in pairs(self.LeaderstatValues) do
+        local statName: string, statValueType: string = unpack(statData)
+        local newValue: IntValue = Instance.new(statValueType) :: IntValue
+        newValue.Value = userData[statName]
+        newValue.Name = statName
+        newValue.Parent = ls
     end
 
     self.Players[plr.Name] = userData

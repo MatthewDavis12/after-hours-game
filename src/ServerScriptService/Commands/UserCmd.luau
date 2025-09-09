@@ -22,10 +22,14 @@ Command:Register({
 		if not (plr.Character and plr.Character:FindFirstChild("Head")) then
 			return
 		end
-		
+	
 		local enabled = args == "no" and 0 or 1
 		plr.Character.Head.Transparency = enabled
-		plr.Character.Head.face.Transparency = enabled
+		
+		local face: Decal? = plr.Character.Head:FindFirstChild("face") :: Decal
+		if face then
+			face.Transparency = enabled
+		end
 	end,
 })
 

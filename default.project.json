@@ -30,9 +30,26 @@
       }
     },
 
-    "PlayerGui": {
-      "$className": "PlayerGui",
-      "$path": "src/PlayerGui"
+    "StarterPack": {
+      "$className": "StarterPack",
+      "$path": "src/StarterPack",
+
+      "Fist": {
+        "$className": "Tool",
+        "$path": "src/StarterPack/Fist",
+        "$properties": {
+          "RequiresHandle": false
+        }
+      },
+      "Sign": {
+        "$className": "Tool",
+        "$path": "src/StarterPack/Sign"
+      }
+    },
+
+    "StarterGui": {
+      "$className": "StarterGui",
+      "$path": "src/StarterGui"
     },
 
     "Workspace": {
