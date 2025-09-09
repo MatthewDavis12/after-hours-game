@@ -30,6 +30,11 @@
       }
     },
 
+    "PlayerGui": {
+      "$className": "PlayerGui",
+      "$path": "src/PlayerGui"
+    },
+
     "Workspace": {
       "$properties": {
         "FilteringEnabled": true

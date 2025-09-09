@@ -16,6 +16,10 @@ local Groups = require("../../ReplicatedStorage/Modules/Group")
 --// Command Manager
 local Command = require("../../ServerScriptService/Commands/Command")
 
+--// Modules
+local Nametag = require("../../ReplicatedStorage/Modules/Nametag")
+local Products = require("../../ReplicatedStorage/Modules/Products")
+
 --// Data
 --// Data is considered one of two types "Private" and "Public".
 --//
@@ -71,10 +75,11 @@ local function generateRecursiveDataObjects(parent: Configuration?, userData: an
 end
 
 --// Create data container
-function Datastore.createDataContainer(plr: Player, userData: UserData.UserData)
+function Datastore.createDataContainer(plr: Player, userData: UserData.UserData): Configuration
     Datastore.Connections[plr.Name] = {}
     local dataContainer: Configuration = generateRecursiveDataObjects(nil, userData, "Data", plr)
     dataContainer.Parent = plr
+    return dataContainer
 end
 
 --// Save user data
@@ -84,14 +89,13 @@ function Datastore:Save(plr: Player)
     end
 
     local plrData: UserData.UserData = self.Players[plr.Name]
-
     UserDataStore:UpdateAsync(tostring(plr.UserId), function(pastData: any)
         return plrData
     end)
 end
 
 --// Load user data
-function Datastore:Load(plr: Player)
+function Datastore:Load(plr: Player): Configuration?
     local success, userData = pcall(function()
         return UserDataStore:GetAsync(tostring(plr.UserId)) 
     end)
@@ -105,19 +109,46 @@ function Datastore:Load(plr: Player)
         userData = UserData:New()
     end
 
-    self.createDataContainer(plr, userData)
     self.Players[plr.Name] = userData
+    return self.createDataContainer(plr, userData)
 end
 
 --// Initialize the data store
 function Datastore:Initialize()
     Players.PlayerAdded:Connect(function(plr: Player)  
-        self:Load(plr)
-        plr:SetAttribute("Role", Groups:GetPermissionLevel(plr)) --// Assign permission levels to player
+        local plrData: Configuration = self:Load(plr)
+        if not plrData then
+            print(plrData)
+            return
+        end
+
+        plr:SetAttribute("Role", Groups:GetGroupRole(plr))             --// Assigns the players role in the group for other things
+        plr:SetAttribute("Permission", Groups:GetPermissionLevel(plr)) --// Assign permission levels to player
+
+        --// Update gamepasses
+        local passData: Configuration? = plrData:FindFirstChild("Gamepasses") :: Configuration
+        if not passData then
+            return
+        end
+
+        for passName in pairs(Products.Gamepasses) do
+            if not Products:ValidateGamepass(plr, passName) then
+                continue
+            end
+            passData:SetAttribute(passName, true)
+        end
 
         --// Attempt to process player messages as commands
         plr.Chatted:Connect(function(msg: string)
             Command:Processor(plr, msg)
+        end)
+
+        --// Character Updates 
+        local char: Model = plr.Character or plr.CharacterAdded:Wait()
+        Nametag:NewTag(plr)
+
+        plr.CharacterAdded:Connect(function(char: Model)
+            Nametag:NewTag(plr)
         end)
     end)
 

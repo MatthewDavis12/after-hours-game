@@ -10,6 +10,11 @@ local Group: any = {
     }
 }
 
+--// Helper function to fetch the users role in the group
+function Group:GetGroupRole(plr: Player): string?
+    return plr:GetRoleInGroup(self.GroupId)
+end
+
 --// Helper function for getting the role
 function Group:GetPermissionLevel(plr: Player): string?
     local currentRole: string = "Owner"

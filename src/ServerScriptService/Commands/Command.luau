@@ -58,7 +58,7 @@ function Command:Processor(plr: Player, msg: string)
 		return
 	end
 
-	local userPerm: unknown? = plr:GetAttribute("Role")
+	local userPerm: unknown? = plr:GetAttribute("Permission")
 	if not Groups:ValidatePermissionLevel(userPerm, cmd.PermLevel) then
 		print("Not enough permissions: Requires "..cmd.PermLevel)
 		return
