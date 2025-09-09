@@ -19,12 +19,12 @@ local nametagTemplate: BillboardGui = ReplicatedStorage:WaitForChild("Assets").N
 local Nametag: any = {
     Tags = {} :: {[string]: BillboardGui},
     LevelColors = {
-        [15000] = Color3.fromRGB(0, 255, 0),
-        [10000] = Color3.fromRGB(230, 0, 230),
-        [5000] = Color3.fromRGB(255, 0, 0),
-        [1000] = Color3.fromRGB(255, 251, 0),
-        [0] = Color3.fromRGB(255, 255, 255)
-    } :: {[number]: Color3}
+        {Level = 15000, Color = Color3.fromRGB(0, 255, 0)},
+        {Level = 10000, Color = Color3.fromRGB(230, 0, 230)},
+        {Level = 5000, Color = Color3.fromRGB(255, 0, 0)},
+        {Level = 1000, Color = Color3.fromRGB(255, 251, 0)},
+        {Level = 0, Color = Color3.fromRGB(255, 255, 255)},
+    }
 }
 
 --// Creates a new nametag
@@ -68,11 +68,12 @@ function Nametag:UpdateTag(plr: Player)
     levelTxt.Text = (afkState and `(AFK) Level ` or `Level `)..Utility:FormatNumberWithCommas(level)
 
     --// Set Level Color
-    for levelLimit: number in pairs(self.LevelColors) do
-        if level < levelLimit then
+    for _, levelData in pairs(self.LevelColors) do
+        if level < levelData.Level and levelData.Level ~= 0 then
             continue
         end
-        levelTxt.TextColor3 = self.LevelColors[levelLimit]
+        levelTxt.TextColor3 = levelData.Color
+        break
     end
 
     --// Setup Group tag icons

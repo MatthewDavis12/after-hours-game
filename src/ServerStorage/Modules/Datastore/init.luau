@@ -68,6 +68,10 @@ local function generateRecursiveDataObjects(parent: Configuration?, userData: an
     --// and releases the stress of managing data key by key
     Datastore.Connections[plr.Name][dataContName] = dataContainer.AttributeChanged:Connect(function(attribute: string)
         userData[attribute] = dataContainer:GetAttribute(attribute)
+
+        if attribute == "Level" then
+            Nametag:UpdateTag(plr)
+        end
     end)
 
     dataContainer.Parent = parent and parent or dataContainer.Parent
@@ -145,9 +149,13 @@ function Datastore:Initialize()
 
         --// Character Updates 
         local char: Model = plr.Character or plr.CharacterAdded:Wait()
+        local hum: Humanoid = char:WaitForChild("Humanoid") :: Humanoid
+        hum.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
         Nametag:NewTag(plr)
 
         plr.CharacterAdded:Connect(function(char: Model)
+            local hum: Humanoid = char:WaitForChild("Humanoid") :: Humanoid
+            hum.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
             Nametag:NewTag(plr)
         end)
     end)
