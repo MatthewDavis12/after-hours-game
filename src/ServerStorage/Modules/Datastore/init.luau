@@ -17,6 +17,7 @@ local Groups = require("../../ReplicatedStorage/Modules/Group")
 local Command = require("../../ServerScriptService/Commands/Command")
 
 --// Modules
+local Collisions = require("../Modules/Collisions")
 local Nametag = require("../../ReplicatedStorage/Modules/Nametag")
 local Products = require("../../ReplicatedStorage/Modules/Products")
 
@@ -147,17 +148,26 @@ function Datastore:Initialize()
             Command:Processor(plr, msg)
         end)
 
-        --// Character Updates 
-        local char: Model = plr.Character or plr.CharacterAdded:Wait()
-        local hum: Humanoid = char:WaitForChild("Humanoid") :: Humanoid
-        hum.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
-        Nametag:NewTag(plr)
-
-        plr.CharacterAdded:Connect(function(char: Model)
+        --// Update Char helper function
+        local function UpdateChar(char: Model)
             local hum: Humanoid = char:WaitForChild("Humanoid") :: Humanoid
             hum.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
             Nametag:NewTag(plr)
-        end)
+
+            --// Update Collisions
+            local plrSettings: Configuration = plrData:FindFirstChild("Settings") :: Configuration
+            if not plrSettings then
+                return
+            end
+
+            Collisions:SetCollisionGroup(char, plrSettings:GetAttribute("PlayerCollisions"))
+        end
+
+        --// Character Updates 
+        local char: Model = plr.Character or plr.CharacterAdded:Wait()
+        UpdateChar(char)
+
+        plr.CharacterAdded:Connect(UpdateChar)
     end)
 
     Players.PlayerRemoving:Connect(function(plr: Player)
