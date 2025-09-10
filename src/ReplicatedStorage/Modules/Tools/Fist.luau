@@ -9,8 +9,12 @@
 --// Services
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+--// Remotes
+local AttackRegister: RemoteEvent = ReplicatedStorage:WaitForChild("Remotes").AttackRegister
+
 --// Modules
 local Modules = ReplicatedStorage:WaitForChild("Modules")
+local Effects = require(Modules:WaitForChild("Effects"))
 local Character = require(Modules:WaitForChild("Character"))
 local Animations = require(Modules:WaitForChild("Animations"))
 
@@ -123,7 +127,14 @@ return function(): T_Fist
                 end
 
                 canDamage = false
-                --// Do Damage (FireServer) :FireServer(plrBodyPart, plrHit)
+                if not plrHit:FindFirstChild("Fist") then
+                    continue
+                end
+                
+                --// Effects: Replicates locally.
+                --   AttackRegsiter: Regsiters damage and replicates effects to the other players
+                Effects:Replicate("Weapons", "Attack", plrBodyPart, plrHit)
+                AttackRegister:FireServer("Weapons", "Attack", plrBodyPart, plrHit)
             end
 
             self.currentComboIndex =  self.currentComboIndex + 1 > self.animeCount and 1 or self.currentComboIndex + 1

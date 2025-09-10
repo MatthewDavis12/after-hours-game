@@ -14,6 +14,9 @@ local Modules = ReplicatedStorage:WaitForChild("Modules")
 --// Load client character module
 local CharacterModule: any = require(Modules.Character)
 
+--// Load Effects
+local Effects: any = require(Modules.Effects)
+
 --// Client connections
 plr.CharacterAdded:Connect(function(char: Model)
     CharacterModule:LoadCharacter()

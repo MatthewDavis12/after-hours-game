@@ -83,7 +83,6 @@ end
 
 --// Play method implementation
 function Animations:Play(animation: string, ...: number?): AnimationTrack?
-    print(animation)
     local animationData = self.animeCache[self.rigType]
     if not animationData then
         return
