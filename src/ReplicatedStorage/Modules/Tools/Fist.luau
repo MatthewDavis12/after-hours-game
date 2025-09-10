@@ -31,6 +31,10 @@ type T_AttackPartList = {[string]: {string}}
 type T_Fist = {
     --// Determines the speed of the fist attacks.
     animeSpeed:        number,
+    --// Swing sound
+    punchSwing:        Sound,
+    --// Hit sound
+    punchAttack:       Sound,
     --// Indicates the total number of attack animations
     animeCount:        number,
     --// Used for attack debouncing.
@@ -63,10 +67,14 @@ end
 
 
 --// Fist Object
-return function(): T_Fist
+return function(fist: Tool): T_Fist
+    local controller: LocalScript = fist:FindFirstChild("Controller") :: LocalScript
+
     return {
         animeSpeed = 1,
         animeCount = animations:GetCount("^FistAttack%d"), 
+        punchSwing = controller:WaitForChild("PunchSwing") :: Sound,
+        punchAttack = controller:WaitForChild("PunchHit") :: Sound,
         isPunching = false,
         currentComboIndex = 1,
         attackParts = {
@@ -109,6 +117,8 @@ return function(): T_Fist
 
             --// Perform hit detection and wait for attack move cooldowns.
             local animeEnd: number = track.Length / self.animeSpeed
+            self.punchSwing:Play()
+
             while animeEnd > track.TimePosition do
                 task.wait()
                 if not canDamage then
@@ -133,6 +143,7 @@ return function(): T_Fist
                 
                 --// Effects: Replicates locally.
                 --   AttackRegsiter: Regsiters damage and replicates effects to the other players
+                self.punchAttack:Play()
                 Effects:Replicate("Weapons", "Attack", plrBodyPart, plrHit)
                 AttackRegister:FireServer("Weapons", "Attack", plrBodyPart, plrHit)
             end
