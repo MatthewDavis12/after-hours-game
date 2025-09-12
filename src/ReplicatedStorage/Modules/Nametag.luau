@@ -31,6 +31,7 @@ local Nametag: any = {
 function Nametag:NewTag(plr: Player)
     local newNameTemp: BillboardGui = nametagTemplate:Clone()
     local char: Model? = plr.Character or plr.CharacterAdded:Wait()
+    local data: Configuration = plr:FindFirstChild("Data") :: Configuration
     if not char then
         return
     end
@@ -38,9 +39,6 @@ function Nametag:NewTag(plr: Player)
     --// Setup nametag onto player
     local head: Part = char:FindFirstChild("Head") :: Part
     newNameTemp.Name = tostring(plr.UserId)
-
-    local username: TextLabel = newNameTemp:FindFirstChild("Username") :: TextLabel
-    username.Text = `{plr.DisplayName} (@{plr.Name})`
     newNameTemp.Parent = char
     newNameTemp.Adornee = head
     newNameTemp.Enabled = true
@@ -57,10 +55,19 @@ function Nametag:UpdateTag(plr: Player)
         return
     end
 
-    local data: Configuration? = plr:FindFirstChild("Data") :: Configuration
-    if not data then
+    local data: Configuration = plr:FindFirstChild("Data") :: Configuration
+    local nametagData: Configuration = data:FindFirstChild("NameTag") :: Configuration
+    if not (data and nametagData) then
         return
     end
+
+    --// Update name tag based on setting values
+    local name: string = nametagData:GetAttribute("Text") :: string
+    local username: TextLabel = tag:FindFirstChild("Username") :: TextLabel
+    tag.Enabled = not nametagData:GetAttribute("HideTag") :: boolean
+    username.TextColor3 = nametagData:GetAttribute("Color") :: Color3
+    username.Text = `{#name == 0 and plr.DisplayName or name} (@{plr.Name})`
+    username.FontFace = Font.fromName(nametagData:GetAttribute("Font") :: string, Enum.FontWeight.Bold)
 
     local level: number = data:GetAttribute("Level") :: number
     local afkState: boolean? = plr:GetAttribute("AFK") :: boolean?

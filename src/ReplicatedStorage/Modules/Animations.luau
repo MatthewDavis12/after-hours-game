@@ -106,6 +106,14 @@ function Animations:Stop(fadeTime: number?)
         return
     end
 
+    for _, track: AnimationTrack in pairs(self.animeCache[self.rigType]) do
+        if not track.IsPlaying then
+            continue
+        end
+
+        track:Stop()
+    end
+
     self.currentPlaying:Stop(fadeTime or 0.1)
     self.playingName = nil
     self.currentPlaying = nil

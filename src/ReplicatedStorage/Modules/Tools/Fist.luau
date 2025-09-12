@@ -44,7 +44,10 @@ type T_Fist = {
     --// Used to track the current combo animation index.
     currentComboIndex: number,
     --// Initiates attacking.
-    Attack:            (self: T_Fist)->()
+    Attack:            (self: T_Fist)->(),
+    --// OnEquipped initiates
+    OnEquip:           (self: T_Fist)->(),
+    Unequip:           (self: T_Fist)->()
 }
 
 --// Helper to help us detect players we hit. 
@@ -93,6 +96,28 @@ return function(fist: Tool): T_Fist
                 "Head"
             }
         },
+
+        --// On equip function
+        OnEquip = function(self)
+            local charMode = require(Modules.Character)
+            local animations = charMode:GetAnimations()
+            if not animations then
+                return
+            end
+            animations:Play("FistIdle")
+        end,
+
+        --// Unequip function
+        Unequip = function(self)
+            local charMode = require(Modules.Character)
+            local animations = charMode:GetAnimations()
+            if not animations then
+                return
+            end
+
+            animations:Stop()
+            self.isPunching = false
+        end,
 
         --// Initialize attacking.
         Attack = function(self)
@@ -143,9 +168,16 @@ return function(fist: Tool): T_Fist
                 
                 --// Effects: Replicates locally.
                 --   AttackRegsiter: Regsiters damage and replicates effects to the other players
-                self.punchAttack:Play()
+                task.spawn(function()
+                    local newPunch: Sound = self.punchAttack:Clone()
+                    newPunch.Parent = plrHit
+                    newPunch:Play()
+                    newPunch.Ended:Wait()
+                    newPunch:Destroy()
+                end)
+                
                 Effects:Replicate("Weapons", "Attack", plrBodyPart, plrHit)
-                AttackRegister:FireServer("Weapons", "Attack", plrBodyPart, plrHit)
+                AttackRegister:FireServer("Weapons", "Attack", plrBodyPart, plrHit, self.currentComboIndex)
             end
 
             self.currentComboIndex =  self.currentComboIndex + 1 > self.animeCount and 1 or self.currentComboIndex + 1

@@ -13,3 +13,11 @@ local FistModule = NewFist(fist)
 fist.Activated:Connect(function()
     FistModule:Attack()
 end)
+
+fist.Equipped:Connect(function()
+    FistModule:OnEquip()
+end)
+
+fist.Unequipped:Connect(function() 
+    FistModule:Unequip()
+end)

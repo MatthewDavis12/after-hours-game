@@ -12,9 +12,12 @@
 --// 
 --// DatastoreName: The datastore name is just the name of the player datastore.
 local UserDataModule: any = {
-    SchemaVersion = 1,
+    SchemaVersion = 2,
     DatastoreName = "Final5"
 }
+
+--// Type to assist with data parsing when loading
+export type Color3Data = {number}
 
 --// User Checklist data type
 type UserChecklist = {[string]: boolean}
@@ -28,13 +31,28 @@ type UserSettings = {
     PlayerCollisions: boolean,
 }
 
+--// User Sign Settings
+type UserSignSettings = {
+    Text:  string,
+    Font:  string,
+    Color: Color3Data
+}
+
+--// Nametag Settings
+type UserNameTagSettings = {
+    Text:    string,
+    Font:    string,
+    Color:   Color3Data,
+    HideTag: boolean
+}
+
 --// User data type definition
 export type UserData = {
     Cash:            number,
     Level:           number,
     Kills:           number,
     Likes:           number,
-    Version:         number,
+    version:         number,
     OutfitID:        number,
     AboutMe:         string,
     ProfileColor:    string,
@@ -43,6 +61,8 @@ export type UserData = {
     Settings:        UserSettings,
     Gamepasses:      UserChecklist, 
     OwnedBanners:    UserChecklist, 
+    Sign:            UserSignSettings,
+    NameTag:         UserNameTagSettings
 }
 
 --// Returns new data based on the UserData data type.
@@ -52,7 +72,7 @@ function UserDataModule:New(): UserData
             Level = 1,
             Kills = 0,
             Likes = 0,
-            Version = self.SchemaVersion,
+            version = self.SchemaVersion,
             OutfitID = 0,
             AboutMe = "",
             ProfileColor = "",
@@ -66,6 +86,17 @@ function UserDataModule:New(): UserData
                 OpenProfiles = true,
                 HighGraphics = true,
                 PlayerCollisions = false
+            },
+            Sign = {
+                Text = "",
+                Font = "BuilderSans",
+                Color = {255, 255, 255}
+            },
+            NameTag = {
+                Text = "",
+                Font = "BuilderSans",
+                Color = {255, 255, 255},
+                HideTag = false
             }
     }
 end

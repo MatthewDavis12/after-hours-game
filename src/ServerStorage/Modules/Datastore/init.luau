@@ -4,7 +4,6 @@
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local DatastoreService = game:GetService("DataStoreService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 --// UserDataStore
 local UserData = require("./Datastore/User")
@@ -18,6 +17,7 @@ local Command = require("../../ServerScriptService/Commands/Command")
 
 --// Modules
 local Collisions = require("../Modules/Collisions")
+local Sign = require("../../ReplicatedStorage/Modules/Sign")
 local Nametag = require("../../ReplicatedStorage/Modules/Nametag")
 local Products = require("../../ReplicatedStorage/Modules/Products")
 
@@ -50,6 +50,20 @@ local Datastore: any = {
     Connections = {} :: {[string]: {[string]: RBXScriptConnection}}
 }
 
+--// Helper function to merge old data to the new schema
+local function mergeDataRecursive(oldData: UserData.UserData, dataSchema: UserData.UserData)
+    for dataKey: string, dataValue: any in pairs(dataSchema) do
+        if not oldData[dataKey] then
+            oldData[dataKey] = dataValue
+            continue
+        end
+
+        if typeof(dataValue) == "table" and dataKey ~= "Color" then
+            mergeDataRecursive(oldData[dataKey], dataValue)
+        end
+    end
+end
+
 --// Helper function that allows us to recursively create
 --// the objects needed for the public values
 local function generateRecursiveDataObjects(parent: Configuration?, userData: any, dataContName: string, plr: Player): Configuration
@@ -61,23 +75,28 @@ local function generateRecursiveDataObjects(parent: Configuration?, userData: an
             continue
         end
 
-        if typeof(dataValue) == "table" then
+        if typeof(dataValue) == "table" and dataKey ~= "Color" then
             generateRecursiveDataObjects(dataContainer, dataValue, dataKey, plr)
             continue
         end
 
-        dataContainer:SetAttribute(dataKey, dataValue)
+        
+        dataContainer:SetAttribute(dataKey, dataKey == "Color" and Color3.fromRGB(unpack(dataValue)) or dataValue)
     end
 
     --// Connection for updating values in the table.
     --// This allows us to update the players data in the table based on changes to the attributes
     --// and releases the stress of managing data key by key
     Datastore.Connections[plr.Name][dataContName] = dataContainer.AttributeChanged:Connect(function(attribute: string)
-        userData[attribute] = dataContainer:GetAttribute(attribute)
-
         if attribute == "Level" then
             Nametag:UpdateTag(plr)
+        elseif attribute == "Color" then
+            local color: Color3 = dataContainer:GetAttribute(attribute) :: Color3
+            userData[attribute] = {color.R * 255, color.G * 255, color.B * 255}
+            return
         end
+
+        userData[attribute] = dataContainer:GetAttribute(attribute)
     end)
 
     dataContainer.Parent = parent and parent or dataContainer.Parent
@@ -94,12 +113,13 @@ end
 
 --// Save user data
 function Datastore:Save(plr: Player)
-    if RunService:IsStudio() then
-        return
-    end
+    -- if RunService:IsStudio() then
+    --     return
+    -- end
 
     local plrData: UserData.UserData = self.Players[plr.Name]
     UserDataStore:UpdateAsync(tostring(plr.UserId), function(pastData: any)
+        print(`Saving data`)
         return plrData
     end)
 end
@@ -116,7 +136,16 @@ function Datastore:Load(plr: Player): Configuration?
     end
 
     if not userData then
+        print(`Generating new data set`)
         userData = UserData:New()
+    end
+
+    print(`User Data(BEFORE):`, userData)
+    --// Check for schema version
+    if not userData.version or userData.version ~= UserData.SchemaVersion then
+        print(`Schema version mismatch, migrating user data to new schema`)
+        mergeDataRecursive(userData, UserData:New())
+        userData.version = UserData.SchemaVersion
     end
 
     --// Build leaderstats folder
@@ -169,8 +198,9 @@ function Datastore:Initialize()
         --// Update Char helper function
         local function UpdateChar(char: Model)
             local hum: Humanoid = char:WaitForChild("Humanoid") :: Humanoid
-            hum.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
+            hum.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.Subject
             Nametag:NewTag(plr)
+            Sign:UpdateSign(plr)
 
             --// Update Collisions
             local plrSettings: Configuration = plrData:FindFirstChild("Settings") :: Configuration
