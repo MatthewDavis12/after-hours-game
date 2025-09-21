@@ -11,3 +11,7 @@ AttackRegister:Listen()
 --// Initialize ServerEvents
 local ServerEvents: any = require("../ServerStorage/Modules/ServerEvents")
 ServerEvents:Listen()
+
+--// Initialize Transactions
+local TransactionService: any = require("../ServerStorage/Modules/TransactionService")
+TransactionService:Listen()

@@ -53,12 +53,12 @@ local Datastore: any = {
 --// Helper function to merge old data to the new schema
 local function mergeDataRecursive(oldData: UserData.UserData, dataSchema: UserData.UserData)
     for dataKey: string, dataValue: any in pairs(dataSchema) do
-        if not oldData[dataKey] then
+        if not oldData[dataKey] or typeof(oldData[dataKey]) ~= typeof(dataValue) then
             oldData[dataKey] = dataValue
             continue
         end
 
-        if typeof(dataValue) == "table" and dataKey ~= "Color" then
+        if typeof(dataValue) == "table" and not dataKey:match("Color") then
             mergeDataRecursive(oldData[dataKey], dataValue)
         end
     end
@@ -75,13 +75,12 @@ local function generateRecursiveDataObjects(parent: Configuration?, userData: an
             continue
         end
 
-        if typeof(dataValue) == "table" and dataKey ~= "Color" then
+        if typeof(dataValue) == "table" and not dataKey:match("Color") then
             generateRecursiveDataObjects(dataContainer, dataValue, dataKey, plr)
             continue
         end
 
-        
-        dataContainer:SetAttribute(dataKey, dataKey == "Color" and Color3.fromRGB(unpack(dataValue)) or dataValue)
+        dataContainer:SetAttribute(dataKey, dataKey:match("Color") and Color3.fromRGB(unpack(dataValue)) or dataValue)
     end
 
     --// Connection for updating values in the table.
@@ -90,7 +89,7 @@ local function generateRecursiveDataObjects(parent: Configuration?, userData: an
     Datastore.Connections[plr.Name][dataContName] = dataContainer.AttributeChanged:Connect(function(attribute: string)
         if attribute == "Level" then
             Nametag:UpdateTag(plr)
-        elseif attribute == "Color" then
+        elseif attribute:match("Color") then
             local color: Color3 = dataContainer:GetAttribute(attribute) :: Color3
             userData[attribute] = {color.R * 255, color.G * 255, color.B * 255}
             return
@@ -113,9 +112,9 @@ end
 
 --// Save user data
 function Datastore:Save(plr: Player)
-    -- if RunService:IsStudio() then
-    --     return
-    -- end
+    if RunService:IsStudio() then
+        return
+    end
 
     local plrData: UserData.UserData = self.Players[plr.Name]
     UserDataStore:UpdateAsync(tostring(plr.UserId), function(pastData: any)
@@ -140,12 +139,14 @@ function Datastore:Load(plr: Player): Configuration?
         userData = UserData:New()
     end
 
-    print(`User Data(BEFORE):`, userData)
+    print(`Verifying schema verison...`)
     --// Check for schema version
     if not userData.version or userData.version ~= UserData.SchemaVersion then
         print(`Schema version mismatch, migrating user data to new schema`)
         mergeDataRecursive(userData, UserData:New())
         userData.version = UserData.SchemaVersion
+    else
+        print(`Schema version up-to-date. Loading player data.`)
     end
 
     --// Build leaderstats folder
@@ -198,6 +199,7 @@ function Datastore:Initialize()
         --// Update Char helper function
         local function UpdateChar(char: Model)
             local hum: Humanoid = char:WaitForChild("Humanoid") :: Humanoid
+            local root = char:WaitForChild("HumanoidRootPart")
             hum.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.Subject
             Nametag:NewTag(plr)
             Sign:UpdateSign(plr)
@@ -208,6 +210,8 @@ function Datastore:Initialize()
                 return
             end
 
+            local viewProfile: BillboardGui = char:WaitForChild("ViewProfile") :: BillboardGui
+            viewProfile.Adornee = root
             Collisions:SetCollisionGroup(char, plrSettings:GetAttribute("PlayerCollisions"))
         end
 

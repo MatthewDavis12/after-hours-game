@@ -67,7 +67,8 @@ function Nametag:UpdateTag(plr: Player)
     tag.Enabled = not nametagData:GetAttribute("HideTag") :: boolean
     username.TextColor3 = nametagData:GetAttribute("Color") :: Color3
     username.Text = `{#name == 0 and plr.DisplayName or name} (@{plr.Name})`
-    username.FontFace = Font.fromName(nametagData:GetAttribute("Font") :: string, Enum.FontWeight.Bold)
+    username.FontFace = Font.fromEnum(Enum.Font[nametagData:GetAttribute("Font")])
+    username.FontFace.Weight = Enum.FontWeight.Bold
 
     local level: number = data:GetAttribute("Level") :: number
     local afkState: boolean? = plr:GetAttribute("AFK") :: boolean?

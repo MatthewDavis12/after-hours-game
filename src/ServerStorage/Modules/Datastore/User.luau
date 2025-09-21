@@ -12,7 +12,7 @@
 --// 
 --// DatastoreName: The datastore name is just the name of the player datastore.
 local UserDataModule: any = {
-    SchemaVersion = 2,
+    SchemaVersion = 3,
     DatastoreName = "Final5"
 }
 
@@ -55,9 +55,9 @@ export type UserData = {
     version:         number,
     OutfitID:        number,
     AboutMe:         string,
-    ProfileColor:    string,
     EquippedBanner:  string,
     firstTimeJoined: boolean,
+    ProfileColor:    Color3Data,
     Settings:        UserSettings,
     Gamepasses:      UserChecklist, 
     OwnedBanners:    UserChecklist, 
@@ -75,9 +75,9 @@ function UserDataModule:New(): UserData
             version = self.SchemaVersion,
             OutfitID = 0,
             AboutMe = "",
-            ProfileColor = "",
             EquippedBanner = "",
             firstTimeJoined = true,
+            ProfileColor = {255, 255, 255},
             Gamepasses = {},
             OwnedBanners = {},
             Settings = {
