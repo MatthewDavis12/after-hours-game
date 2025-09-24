@@ -5,8 +5,6 @@
 --// Primary command processor as well as register. 
 --// Contains all methods and prorperties used to implement commands
 --//
---// TODO
---// Focus on permissions
 
 --// For permission validation
 local Groups = require("../../ReplicatedStorage/Modules/Group")
@@ -58,7 +56,7 @@ function Command:Processor(plr: Player, msg: string)
 	--// Query for the command. Once the command is found we'll
 	--// check for proper permissions
 	local token = msg:match("^"..self.prefix.."(%w+)")
-	local cmd   = self:queryRegistry(token)
+	local cmd = self:queryRegistry(token)
 	if not token or not cmd then
 		print("Invalid token: "..msg)
 		return
